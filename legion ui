@@ -1,64 +1,115 @@
 -- Create the ScreenGui
 local gui = Instance.new("ScreenGui")
-gui.Name = "AzureFrame"
+gui.Name = "AzureStyleUI"
 gui.ResetOnSpawn = false
 gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
--- Create the main frame with slightly smaller size (500x300)
+-- Create the main frame (one column layout)
 local frame = Instance.new("Frame")
 frame.Name = "MainFrame"
-frame.Size = UDim2.new(0, 500, 0, 300)
-frame.Position = UDim2.new(0.5, -250, 0.5, -150) -- Centered
-frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-frame.BackgroundTransparency = 0.1
+frame.Size = UDim2.new(0, 400, 0, 600)
+frame.Position = UDim2.new(0.5, -200, 0.6, -300)  -- Move the frame lower (0.6 instead of 0.5)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 0
-frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.AnchorPoint = Vector2.new(0.5, 0.5)  -- Ensures the frame is anchored at its center
 frame.Parent = gui
 
 -- Rounded corners
 local uicorner = Instance.new("UICorner")
-uicorner.CornerRadius = UDim.new(0, 12)
+uicorner.CornerRadius = UDim.new(0, 10)
 uicorner.Parent = frame
 
--- Title bar
+-- Title
 local title = Instance.new("TextLabel")
 title.Name = "Title"
-title.Size = UDim2.new(1, 0, 0, 50)
+title.Size = UDim2.new(1, 0, 0, 40)
 title.BackgroundTransparency = 1
-title.Text = "Azure Modded UI"
+title.Text = "Azure Modded | Single Column Style"
 title.TextColor3 = Color3.fromRGB(0, 170, 255)
-title.TextSize = 28
+title.TextSize = 24
 title.Font = Enum.Font.GothamBold
 title.Parent = frame
 
--- Draggable bar
-local drag = Instance.new("Frame")
-drag.Size = UDim2.new(1, 0, 0, 50)
-drag.BackgroundTransparency = 1
-drag.Parent = frame
+-- UI ListLayout to stack elements vertically
+local layout = Instance.new("UIListLayout")
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0, 6)
+layout.Parent = frame
 
-local UIS = game:GetService("UserInputService")
-local dragging, dragInput, dragStart, startPos
+-- Function to create a toggle row
+local function createToggle(labelText)
+    local toggle = Instance.new("Frame")
+    toggle.Size = UDim2.new(1, -20, 0, 30)
+    toggle.BackgroundTransparency = 1
+    toggle.LayoutOrder = 1
+    toggle.Parent = frame
 
-drag.InputBegan:Connect(function(input)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(0.8, 0, 1, 0)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = labelText
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.TextSize = 18
+    label.Font = Enum.Font.Gotham
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = toggle
+
+    local box = Instance.new("TextButton")
+    box.Size = UDim2.new(0, 20, 0, 20)
+    box.Position = UDim2.new(1, -30, 0.5, -10)
+    box.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Set to red by default
+    box.Text = ""
+    box.Name = "Toggle"
+    box.AutoButtonColor = false
+    box.Parent = toggle
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = box
+
+    -- Toggle behavior
+    local isOn = false  -- Track if the toggle is ON or OFF
+    box.MouseButton1Click:Connect(function()
+        if isOn then
+            box.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Change to red
+        else
+            box.BackgroundColor3 = Color3.fromRGB(0, 255, 0)  -- Change to green
+        end
+        isOn = not isOn  -- Toggle the state
+    end)
+end
+
+-- Add example toggles
+createToggle("Enabled")
+createToggle("Auto Lock")
+createToggle("Wall Check")
+createToggle("Highlight")
+
+-- DRAG FUNCTIONALITY
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+frame.InputBegan:Connect(function(input, isProcessed)
+    if isProcessed then return end
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
         dragStart = input.Position
         startPos = frame.Position
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then dragging = false end
-        end)
     end
 end)
 
-drag.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+frame.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
 end)
 
-UIS.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - dragStart
-        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
     end
 end)
