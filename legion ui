@@ -1,0 +1,64 @@
+-- Create the ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "AzureFrame"
+gui.ResetOnSpawn = false
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+-- Create the main frame with slightly smaller size (500x300)
+local frame = Instance.new("Frame")
+frame.Name = "MainFrame"
+frame.Size = UDim2.new(0, 500, 0, 300)
+frame.Position = UDim2.new(0.5, -250, 0.5, -150) -- Centered
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+frame.BackgroundTransparency = 0.1
+frame.BorderSizePixel = 0
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.Parent = gui
+
+-- Rounded corners
+local uicorner = Instance.new("UICorner")
+uicorner.CornerRadius = UDim.new(0, 12)
+uicorner.Parent = frame
+
+-- Title bar
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, 0, 0, 50)
+title.BackgroundTransparency = 1
+title.Text = "Azure Modded UI"
+title.TextColor3 = Color3.fromRGB(0, 170, 255)
+title.TextSize = 28
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
+
+-- Draggable bar
+local drag = Instance.new("Frame")
+drag.Size = UDim2.new(1, 0, 0, 50)
+drag.BackgroundTransparency = 1
+drag.Parent = frame
+
+local UIS = game:GetService("UserInputService")
+local dragging, dragInput, dragStart, startPos
+
+drag.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+
+drag.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
